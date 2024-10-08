@@ -1,7 +1,7 @@
 # ProyekAnalisis_Data
 
 ## Setup Environment
-'''Bash
+'''
 conda create --name main-ds python=3.9
 conda activate main-ds
 pip install -r requirements.txt
@@ -10,7 +10,7 @@ python -m ipykernel install --user --name=main-ds
 '''
 
 ## Setup Environment - Shell/Terminal
-'''Bash
+'''
 mkdir proyek_analisis_data
 cd proyek_analisis_data
 pipenv install
@@ -19,6 +19,6 @@ pip install -r requirements.txt
 '''
 
 ## Run Streamlit app
-'''Bash
+'''
 streamlit run dashboard.py
 '''
