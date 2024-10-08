@@ -7,6 +7,7 @@ conda activate main-ds
 pip install -r requirements.txt
 conda install ipykernel
 python -m ipykernel install --user --name=main-ds
+'''
 
 ## Setup Environment - Shell/Terminal
 '''Bash
@@ -15,7 +16,9 @@ cd proyek_analisis_data
 pipenv install
 pipenv shell
 pip install -r requirements.txt
+'''
 
 ## Run Streamlit app
 '''Bash
 streamlit run dashboard.py
+'''
