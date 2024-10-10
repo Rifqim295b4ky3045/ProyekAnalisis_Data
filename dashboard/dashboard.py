@@ -1,60 +1,66 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-# Load data
-day_data = pd.read_csv('data/day.csv')
-hour_data = pd.read_csv('data/hour.csv')
+# Load dataset
+file_pathday = 'data/day.csv'  # Gantilah dengan path file aslimu
+file_pathhour = 'data/hour.csv'
+data = pd.read_csv(file_pathday)
+data = pd.read_csv(file_pathhour)
 
-# Title
-st.title('Dashboard Rental Sepeda')
+# Convert 'dteday' to datetime
+data['dteday'] = pd.to_datetime(data['dteday'])
 
-# Sidebar untuk input pengguna
-st.sidebar.header('Pengaturan Visualisasi')
-data_choice = st.sidebar.selectbox("Pilih data yang ingin ditampilkan:", ["Data Harian", "Data Jam"])
+# Sidebar filters
+st.sidebar.header('Filter Options')
 
-# Pilihan data
-if data_choice == "Data Harian":
-    data = day_data
-else:
-    data = hour_data
+# Date range filter
+start_date = st.sidebar.date_input('Start date', data['dteday'].min())
+end_date = st.sidebar.date_input('End date', data['dteday'].max())
 
-# Input dari pengguna
-st.sidebar.subheader("Filter Berdasarkan Waktu:")
-start_date = st.sidebar.date_input('Pilih tanggal mulai', value=pd.to_datetime(data['dteday']).min())
-end_date = st.sidebar.date_input('Pilih tanggal akhir', value=pd.to_datetime(data['dteday']).max())
-filtered_data = data[(pd.to_datetime(data['dteday']) >= pd.to_datetime(start_date)) & 
-                     (pd.to_datetime(data['dteday']) <= pd.to_datetime(end_date))]
+# Weather filter
+weather_options = st.sidebar.multiselect(
+    'Select Weather Condition',
+    options=data['weathersit'].unique(),
+    default=data['weathersit'].unique()
+)
 
-# Input untuk parameter visualisasi tren
-st.sidebar.subheader("Filter Berdasarkan Kondisi Cuaca:")
-weather_choice = st.sidebar.multiselect("Pilih kondisi cuaca:", filtered_data['weathersit'].unique())
+# Filter data based on user inputs
+filtered_data = data[
+    (data['dteday'] >= pd.to_datetime(start_date)) & 
+    (data['dteday'] <= pd.to_datetime(end_date)) & 
+    (data['weathersit'].isin(weather_options))
+]
 
-if weather_choice:
-    filtered_data = filtered_data[filtered_data['weathersit'].isin(weather_choice)]
+# Main dashboard
+st.title('Bike Sharing Dashboard')
 
-# Input untuk suhu
-min_temp = st.sidebar.slider('Suhu minimum:', min_value=float(data['temp'].min()), max_value=float(data['temp'].max()), value=float(data['temp'].min()))
-max_temp = st.sidebar.slider('Suhu maksimum:', min_value=float(data['temp'].min()), max_value=float(data['temp'].max()), value=float(data['temp'].max()))
-filtered_data = filtered_data[(filtered_data['temp'] >= min_temp) & (filtered_data['temp'] <= max_temp)]
-
-# Visualisasi tren penggunaan sepeda berdasarkan waktu, cuaca, dan suhu
-st.subheader("Tren Penggunaan Sepeda")
-st.line_chart(filtered_data[['dteday', 'cnt']].set_index('dteday'))
-
-# Pilihan parameter untuk visualisasi korelasi
-st.sidebar.subheader("Visualisasi Korelasi")
-param1 = st.sidebar.selectbox('Pilih parameter pertama:', filtered_data.columns)
-param2 = st.sidebar.selectbox('Pilih parameter kedua:', filtered_data.columns)
-
-# Visualisasi korelasi antara 2 parameter
-if param1 and param2:
-    st.subheader(f'Korelasi antara {param1} dan {param2}')
-    fig, ax = plt.subplots()
-    sns.scatterplot(data=filtered_data, x=param1, y=param2, ax=ax)
-    st.pyplot(fig)
-
-# Menampilkan data yang sudah difilter
-st.subheader("Data yang Ditampilkan")
+# Show filtered data
+st.write(f"Showing data from {start_date} to {end_date}")
 st.dataframe(filtered_data)
+
+# Visualize Total Users (cnt) over time
+st.subheader('Total Users Over Time')
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(filtered_data['dteday'], filtered_data['cnt'], color='blue', label='Total Users')
+ax.set_xlabel('Date')
+ax.set_ylabel('Total Users')
+ax.set_title('Total Users Over Time')
+ax.grid(True)
+st.pyplot(fig)
+
+# Visualize correlation between 'cnt' and 'weathersit'
+st.subheader('Correlation between Total Users and Weather Conditions')
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.scatter(filtered_data['weathersit'], filtered_data['cnt'], alpha=0.5, color='purple')
+ax.set_xlabel('Weather Situation (1: Clear, 2: Mist, 3: Light Snow/Rain)')
+ax.set_ylabel('Total Users')
+ax.set_title('Correlation between Total Users and Weather Conditions')
+ax.grid(True)
+st.pyplot(fig)
+
+# Additional statistics
+st.subheader('Additional Statistics')
+st.write(f"Average number of total users: {filtered_data['cnt'].mean():.2f}")
+st.write(f"Max number of total users: {filtered_data['cnt'].max()}")
+st.write(f"Min number of total users: {filtered_data['cnt'].min()}")
